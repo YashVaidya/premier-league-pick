@@ -136,7 +136,7 @@ def score_match(match, matches, standings):
     total = min(form + goals + stakes, 100)
 
     bits = []
-    bits.append("form " + "".join(home_form or ["?"]) + " vs " + "".join(away_form or ["?"]))
+    bits.append("form " + "-".join(home_form or ["?"]) + " vs " + "-".join(away_form or ["?"]))
     if expected_goals >= 3:
         bits.append("both sides have been scoring")
     bits.append(stakes_why)

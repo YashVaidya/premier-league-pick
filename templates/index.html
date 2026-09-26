@@ -2,58 +2,91 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PremierLeaguePick</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; color: #222; }
-    h1 { margin-bottom: 4px; }
-    .sub { color: #555; margin-bottom: 20px; }
-    form { margin: 16px 0 24px; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 32px; }
-    th, td { border-bottom: 1px solid #ddd; text-align: left; padding: 8px; vertical-align: top; }
-    th { font-size: 13px; color: #444; }
-    .fav { background: #fff6d6; }
-    .score { font-weight: bold; font-size: 20px; }
-    .reason { color: #444; font-size: 13px; }
-    a { color: #1a4e8a; }
+    body { font-family: Georgia, "Times New Roman", serif; max-width: 920px; margin: 0 auto; padding: 28px 18px 48px; color: #1c1c1c; background: #f6f4ef; }
+    h1 { font-size: 28px; margin: 0 0 6px; }
+    h2 { font-size: 20px; margin: 28px 0 12px; }
+    .sub { color: #444; margin: 0 0 18px; line-height: 1.45; }
+    .box { background: #fff; border: 1px solid #ddd6c8; padding: 14px 16px; margin: 16px 0; }
+    form { margin: 0; }
+    select, input[type=submit] { font: inherit; padding: 6px 8px; }
+    input[type=submit] { background: #163a28; color: #fff; border: 0; cursor: pointer; }
+    table { border-collapse: collapse; width: 100%; background: #fff; border: 1px solid #ddd6c8; }
+    th, td { border-bottom: 1px solid #eee; text-align: left; padding: 10px 8px; vertical-align: top; }
+    th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: #555; background: #faf8f3; }
+    .fav { background: #fff4c2; }
+    .score { font-weight: bold; font-size: 26px; line-height: 1; }
+    .band { display: block; font-size: 11px; color: #555; margin-top: 4px; font-weight: normal; }
+    .reason { color: #444; font-size: 14px; line-height: 1.4; }
+    .meta { color: #666; font-size: 13px; }
+    a { color: #163a28; }
+    footer { margin-top: 28px; font-size: 13px; color: #555; }
+    .legend dt { font-weight: bold; }
+    .legend dd { margin: 0 0 8px 0; color: #444; }
   </style>
 </head>
 <body>
   <h1>PremierLeaguePick</h1>
-  <p class="sub">Ranked must-watch Premier League games. Pick a favorite club if you want those rows highlighted.</p>
+  <p class="sub">Ranked must-watch Premier League games. Pick a favorite club to highlight their rows.</p>
 
-  <form method="POST" action="/">
-    <label>Favorite team
-      <select name="favorite_team">
-        <option value="">(none)</option>
-        {% for t in teams %}
-          <option value="{{ t }}" {% if favorite == t %}selected{% endif %}>{{ t }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <input type="submit" value="Show report">
-  </form>
+  <div class="box">
+    <form method="POST" action="/">
+      <label>Favorite team
+        <select name="favorite_team">
+          <option value="">(none)</option>
+          {% for t in teams %}
+            <option value="{{ t }}" {% if favorite == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <input type="submit" value="Show report">
+    </form>
+    {% if favorite %}
+      <p class="meta">Highlighting <b>{{ favorite }}</b>.</p>
+    {% endif %}
+  </div>
 
-  {% if favorite %}
-    <p>Highlighting <b>{{ favorite }}</b>.</p>
-  {% endif %}
+  <div class="box">
+    <p style="margin:0 0 8px;"><b>What the number means</b></p>
+    <p class="meta" style="margin:0 0 10px;">Watch score is 0–100. Higher = more worth your time. It is <i>not</i> a predicted match result.</p>
+    <dl class="legend">
+      <dt>Form (max 40)</dt>
+      <dd>Recent win / draw / loss for both teams.</dd>
+      <dt>Goals (max 30)</dt>
+      <dd>How much those sides have been scoring lately.</dd>
+      <dt>Stakes (max 30)</dt>
+      <dd>How much the game matters in the table (top six, close positions, relegation).</dd>
+    </dl>
+    <p class="meta" style="margin:0;">Rough guide: <b>75+</b> must-watch · <b>55–74</b> worth a look · <b>under 55</b> skip unless it’s your club.</p>
+  </div>
 
   <h2>Must-watch matchday</h2>
   {% if rankings %}
   <table>
     <tr>
       <th>#</th>
-      <th>Watch</th>
+      <th>Watch score</th>
       <th>Match</th>
       <th>Why</th>
     </tr>
     {% for r in rankings %}
     <tr class="{% if favorite and (r.home_team == favorite or r.away_team == favorite) %}fav{% endif %}">
       <td>{{ loop.index }}</td>
-      <td class="score">{{ r.watch_score }}</td>
       <td>
-        {{ r.home_team }} vs {{ r.away_team }}<br>
-        <small>{{ r.utc_date }} · md {{ r.matchday }} · {{ r.status }}</small><br>
-        <small>form {{ r.form_score }} · goals {{ r.goals_score }} · stakes {{ r.stakes_score }}</small>
+        <span class="score">{{ r.watch_score }}</span>
+        <span class="band">
+          {% if r.watch_score >= 75 %}must-watch
+          {% elif r.watch_score >= 55 %}worth a look
+          {% else %}lower priority{% endif %}
+          · /100
+        </span>
+      </td>
+      <td>
+        <b>{{ r.home_team }} vs {{ r.away_team }}</b><br>
+        <span class="meta">{{ r.utc_date.strftime('%b %d, %Y · %H:%M UTC') }} · matchday {{ r.matchday }}</span><br>
+        <span class="meta">form {{ r.form_score }}/40 · goals {{ r.goals_score }}/30 · stakes {{ r.stakes_score }}/30</span>
       </td>
       <td class="reason">{{ r.reason }}</td>
     </tr>
@@ -63,7 +96,7 @@
     <p>No rankings yet. Run the collector and analyzer first.</p>
   {% endif %}
 
-  <h2>Table</h2>
+  <h2>League table</h2>
   {% if standings %}
   <table>
     <tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
@@ -84,11 +117,12 @@
     <p>No standings yet.</p>
   {% endif %}
 
-  <p>
+  <footer>
+    JSON for graders / other services:
     <a href="/api/rankings">rankings API</a> ·
     <a href="/api/standings">standings API</a> ·
     <a href="/health">health</a> ·
     <a href="/status">status</a>
-  </p>
+  </footer>
 </body>
 </html>
