@@ -43,18 +43,19 @@ def parse_utc(value):
 def save_matches(payload):
     for m in payload.get("matches", []):
         ft = (m.get("score") or {}).get("fullTime") or {}
-        row = db.session.get(Match, m["id"])
-        if row is None:
-            row = Match(id=m["id"])
-            db.session.add(row)
-        row.utc_date = parse_utc(m["utcDate"])
-        row.status = m.get("status") or "UNKNOWN"
-        row.matchday = m.get("matchday")
-        row.home_team = m["homeTeam"]["name"]
-        row.away_team = m["awayTeam"]["name"]
-        row.home_score = ft.get("home")
-        row.away_score = ft.get("away")
-        row.collected_at = datetime.utcnow()
+        # merge so a second collect (or seed + worker) doesnt blow up on pk
+        row = Match(
+            id=m["id"],
+            utc_date=parse_utc(m["utcDate"]),
+            status=m.get("status") or "UNKNOWN",
+            matchday=m.get("matchday"),
+            home_team=m["homeTeam"]["name"],
+            away_team=m["awayTeam"]["name"],
+            home_score=ft.get("home"),
+            away_score=ft.get("away"),
+            collected_at=datetime.utcnow(),
+        )
+        db.session.merge(row)
 
 
 def save_standings(payload):
