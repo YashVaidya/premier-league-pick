@@ -20,6 +20,9 @@ def db_uri():
     # heroku used to give postgres:// which sqlalchemy doesnt like
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
+    # sqlalchemy 2.1 defaults to psycopg v3; we installed psycopg2
+    if uri.startswith("postgresql://") and "+psycopg2" not in uri:
+        uri = uri.replace("postgresql://", "postgresql+psycopg2://", 1)
     return uri
 
 
