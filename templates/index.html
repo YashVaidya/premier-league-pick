@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PremierLeaguePick</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; color: #222; }
+    h1 { margin-bottom: 4px; }
+    .sub { color: #555; margin-bottom: 20px; }
+    form { margin: 16px 0 24px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 32px; }
+    th, td { border-bottom: 1px solid #ddd; text-align: left; padding: 8px; vertical-align: top; }
+    th { font-size: 13px; color: #444; }
+    .fav { background: #fff6d6; }
+    .score { font-weight: bold; font-size: 20px; }
+    .reason { color: #444; font-size: 13px; }
+    a { color: #1a4e8a; }
+  </style>
+</head>
+<body>
+  <h1>PremierLeaguePick</h1>
+  <p class="sub">Ranked must-watch Premier League games. Pick a favorite club if you want those rows highlighted.</p>
+
+  <form method="POST" action="/">
+    <label>Favorite team
+      <select name="favorite_team">
+        <option value="">(none)</option>
+        {% for t in teams %}
+          <option value="{{ t }}" {% if favorite == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <input type="submit" value="Show report">
+  </form>
+
+  {% if favorite %}
+    <p>Highlighting <b>{{ favorite }}</b>.</p>
+  {% endif %}
+
+  <h2>Must-watch matchday</h2>
+  {% if rankings %}
+  <table>
+    <tr>
+      <th>#</th>
+      <th>Watch</th>
+      <th>Match</th>
+      <th>Why</th>
+    </tr>
+    {% for r in rankings %}
+    <tr class="{% if favorite and (r.home_team == favorite or r.away_team == favorite) %}fav{% endif %}">
+      <td>{{ loop.index }}</td>
+      <td class="score">{{ r.watch_score }}</td>
+      <td>
+        {{ r.home_team }} vs {{ r.away_team }}<br>
+        <small>{{ r.utc_date }} · md {{ r.matchday }} · {{ r.status }}</small><br>
+        <small>form {{ r.form_score }} · goals {{ r.goals_score }} · stakes {{ r.stakes_score }}</small>
+      </td>
+      <td class="reason">{{ r.reason }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No rankings yet. Run the collector and analyzer first.</p>
+  {% endif %}
+
+  <h2>Table</h2>
+  {% if standings %}
+  <table>
+    <tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
+    {% for s in standings %}
+    <tr class="{% if favorite and s.team_name == favorite %}fav{% endif %}">
+      <td>{{ s.position }}</td>
+      <td>{{ s.team_name }}</td>
+      <td>{{ s.played_games }}</td>
+      <td>{{ s.won }}</td>
+      <td>{{ s.draw }}</td>
+      <td>{{ s.lost }}</td>
+      <td>{{ s.goal_difference }}</td>
+      <td>{{ s.points }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No standings yet.</p>
+  {% endif %}
+
+  <p>
+    <a href="/api/rankings">rankings API</a> ·
+    <a href="/api/standings">standings API</a> ·
+    <a href="/health">health</a> ·
+    <a href="/status">status</a>
+  </p>
+</body>
+</html>
